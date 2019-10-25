@@ -8,11 +8,18 @@ I am certainly thrilled with IoT, but I prefer to keep as much as I can within t
 ## Configure
 ### Lighting Schedules
 Modify ```hue.sched``` for your lighting preferences
-* _lights
-* _lightsON
-* _lightsOFF
-* _bynite
-* _bytv
+* ```lightnames```: these are logical and can essentially be anything desired.
+* ```lightstate```: should be initialized to ```OFF```.
+* ```lights```: the assigned light number by the HUE bridge. May take some testing to get the correct ordinal number to correspond to the logical light.
+* ```lightsON```: The date time (in Linux epoch) when the light is to come on.
+* ```lightsOFF```: The date time (in Linux epoch) when the light is to go out.
+* ```bynite```: ```TRUE``` means the scheduled event should follow Sun up/down, otherwise set to ```FALSE```.
+* ```bytv```: ```TRUE``` means the scheduled event should follow state of another IOT device in the household, like a TV/Home Theater. Otherwise set to ```FALSE```.
+* ```byvacation```: ```TRUE``` means the scheduled event should follow state of being away (such as on vacation) for a longer period of time.  Otherwise set to ```FALSE```.
+Rules:
+*  ```lightnames``` and ```lightstate``` have the same number of elements equal to the number of lights you want to control.
+*  ```lights```, ```lightsON```, ```lightsOFF```, ```bynite```, ```bytv```, and ```byvacation``` have the same number of elements equal to the number of scheduled ```lightsON events ``` (or ```lightsOFF``` if you prefer).
+Determining the Linux epoch for ```lightsON``` and ```lightsOFF```
 ### Local Settings
 Modify ```autoHue.sh``` for local settings
 * LOC
