@@ -25,7 +25,7 @@ ARGUP=3
 # location data where lights are controlled
 #
 # Apple HQ, Cupertino, CA, US
-#LOC="37.331730N 122.030733W"
+LOC="37.331730N 122.030733W"
 #
 
 #
@@ -155,8 +155,6 @@ switchLight()
 
 # main
 
-_ON=false
-
 while true  # {
 do
   touch ${NOWFILE}
@@ -195,7 +193,6 @@ do
     switchLight 1 OFF
     switchLight 2 OFF
     switchLight 3 OFF
-    _ON=false
 
     # now, wait for sunset
 
@@ -237,7 +234,7 @@ do
 #continue;
 
       #
-      # lights can be drive by night time (bynite) or if
+      # lights can be driven by night time (bynite) or if
       # on vacation
       #
       if [ ${bynite[${LIGHT}]} -eq ${TRUE} ]; then
