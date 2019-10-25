@@ -36,11 +36,10 @@ declare -a lights=("1" \
                    "3" \
                    "3" )
 
-#1 on at hour before sunrise +/-5 min; off 8:00 +/-5min
-#1 on at sunset +/-15 min; off 9:30 +/-5min
-#2 on at 7:00pm +/-5min; off 11:00pm +/-5min
-#3 on at 54*2 min before sunrise; off at sunrise +/-5min
-#3 on at sunset +/-5 min; off at 57*7 min after sunset
+# 1 on at sunset +/-15 min; off 9:30 +/-5min
+# 2 on at 7:00pm +/-5min; off 11:00pm +/-5min
+# 3 on at 54*2 min before sunrise; off at sunrise +/-5min
+# 3 on at sunset +/-5 min; off at 57*7 min after sunset
 
 declare -a lightsON=( \
   $(date --date="Today $(date --date=@${_SUNSET} +"%H:%M:%S") $((${RANDOM}%15)) mins ago" +"%s") \
