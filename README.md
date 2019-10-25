@@ -15,7 +15,7 @@ TBD
 # Task Lists
 - [x] Debian/Ubuntu
 - [ ] Place localizations, API keys in a configuration/parameters file
-- [ ] Revise to work with https://github.com/risacher/sunwait.git (new version of sunwait from 2004)
+- [ ] Revise to work with [Risacher's Sunwait](https://github.com/risacher/sunwait.git) (new version of sunwait from 2004)
 - [ ] Move startup from /etc/rc.local to systemd
 - [ ] Create a GUI to generate a schedule
 - [ ] Port to work with BSD ```date```
