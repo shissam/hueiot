@@ -1,0 +1,91 @@
+
+TRUE=0
+FALSE=1
+
+#
+# _SUNUP and _SUNSET are set in the environment
+# fail if not
+#
+echo "SUNUP= ${_SUNUP} or ${_darkends_hm}"
+echo "now=   $(date +%s)"
+echo "SUNSET=${_SUNSET} or ${_darkstart_hm}"
+
+if [ -z "${_SUNUP}" ]; then
+   echo err null _SUNUP; exit
+fi
+if [ -z "${_SUNSET}" ]; then
+   echo err null _SUNSET; exit
+fi
+
+#
+# 1 is hallway
+# 2 is tv
+# 3 is attic
+#
+
+declare -a lightnames=("hallway" \
+                       "tv"      \
+                       "attic"   )
+
+declare -a lightstate=("OFF" \
+                       "OFF" \
+                       "OFF" )
+
+declare -a lights=("1" \
+                   "2" \
+                   "3" \
+                   "3" )
+
+#1 on at hour before sunrise +/-5 min; off 8:00 +/-5min
+#1 on at sunset +/-15 min; off 9:30 +/-5min
+#2 on at 7:00pm +/-5min; off 11:00pm +/-5min
+#3 on at 54*2 min before sunrise; off at sunrise +/-5min
+#3 on at sunset +/-5 min; off at 57*7 min after sunset
+
+declare -a lightsON=( \
+  $(date --date="Today $(date --date=@${_SUNSET} +"%H:%M:%S") $((${RANDOM}%15)) mins ago" +"%s") \
+  $(date --date="Today 19:00:00 $((${RANDOM}%5)) mins ago" +"%s") \
+  $(date --date="Today $(date --date=@${_SUNUP} +"%H:%M:%S") $((54*2)) mins ago" +"%s") \
+  $(date --date="Today $(date --date=@${_SUNSET} +"%H:%M:%S") $((${RANDOM}%5)) mins ago" +"%s") \
+)
+
+declare -a lightsOFF=( \
+  $(date --date="Today 21:30:00 $((${RANDOM}%5)) mins ago" +"%s") \
+  $(date --date="Today 23:00:00 $((${RANDOM}%5)) mins ago" +"%s") \
+  $(date --date="Today $(date --date=@${_SUNUP} +"%H:%M:%S") $((${RANDOM}%5)) mins" +"%s") \
+  $(date --date="Today $(date --date=@${_SUNSET} +"%H:%M:%S") $((57*7)) mins" +"%s") \
+)
+
+#
+# here the hallway and tv hue lights are not controlled by darkness
+# while the light in the attic is
+#
+declare -a bynite=( \
+  ${FALSE} \
+  ${FALSE} \
+  ${TRUE} \
+  ${TRUE} \
+)
+
+#
+# the hallway and tv hue lights are controlled by the state of the
+# home theater, while the attic light is not
+#
+declare -a bytv=( \
+  ${TRUE} \
+  ${TRUE} \
+  ${FALSE} \
+  ${FALSE} \
+)
+
+#
+# the hallway and tv hue lights will go ON/OFF by vacation schedule
+# while the attic light schedule ignores vacation status
+#
+declare -a byvacation=( \
+  ${TRUE} \
+  ${TRUE} \
+  ${FALSE} \
+  ${FALSE} \
+)
+
