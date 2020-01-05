@@ -5,13 +5,17 @@ IOTDIR=/home/pi/iot
 VACA=/home/pi/iot
 
 #
-# Hue bridge DEVICE IP or Name and API key
+# Hue DEVICE IP or Name and API key
 #
 HUEDEV=hue1.
-#
-# replace with your Hue bridge API key
-#
 HUEAPIKEY=h141PPBfcgxbN5NG
+
+#
+# 433Mhz Transmitter server
+#
+_433DEV=bpluspi.
+
+CURL=curl
 
 #
 # these args are custom for the sunwait program
@@ -28,14 +32,9 @@ ARGUP=3
 LOC="37.331730N 122.030733W"
 #
 
-#
-# minimum interval for checking/chaning lights (in sec)
-#
 SLEEPYTIME=30
+#
 
-#
-# controls when the lighting schedule is re-read
-#
 NOWFILE=/tmp/schedV4.now
 TOMFILE=/tmp/schedV4.tomorrow
 rm -f ${TOMFILE}
@@ -118,36 +117,87 @@ daylight()
 }
 
 #
-# issues HUE command to switch a light on an off, designed to 
-# track internally actual state of light to reduce unnecessary
+# issue HUE or 433mhz command to switch a light on an off, designed to 
+# track, internally, actual state of light to reduce unnecessary
 # API calls (if the light is ON and we're switching ON, no need
-# to make the API call)
+# to make the Hue API call). Some 433mhz lights (RF LED kits) use
+# the same code to toggle on/off - so if ON and needs to be ON
+# don't send code otherwise the light will toggle OFF
 #
-# TODO: works for up to 5 lights, make this dynamic for 
-#       number of unique lights in schedule
-#
-declare -a _realState=( "unk" "unk" "unk" "unk" "unk" )
+
+switch433mhz()
+{
+  if [ "${2}" = "ON" -a "${_realState[${1}]}" = "ON" ]; then
+    return 0
+  fi
+
+  if [ "${2}" = "OFF" -a "${_realState[${1}]}" = "unk" ]; then
+    #
+    # if codes for ON/OFF are same (a toggle); on 'unknown' state
+    # assume OFF and don't send an initial OFF code (which could
+    # inadvertly toggle the light 'ON'
+    #
+    if [ "${light433mhzON[${1}]}" = "${light433mhzOFF[${1}]}" ]; then
+      _realState[${1}]="OFF"
+    fi
+  fi
+
+  if [ "${2}" = "OFF" -a "${_realState[${1}]}" = "OFF" ]; then
+    return 0
+  fi
+
+  if [ "${2}" = "ON" ]; then
+    _code=${light433mhzON[${1}]}
+  else
+    _code=${light433mhzOFF[${1}]}
+  fi
+  #
+  # 433mhz have specific pulse lengths, use what was discovered
+  #
+  _pulse=${light433mhzPULSE[${1}]}
+
+  _realState[${1}]=${2}
+
+  if [ -f /tmp/overrideLEDcontrol ]; then
+    return 0
+  fi
+
+  ${CURL} --silent \
+       -o /dev/null \
+       http://${_433DEV}/led/433send.php?433code=${_code}\&433pulse=${_pulse}  && \
+    echo ${1} curled LED ${2} $(date +"%m-%d %H:%M:%S")
+
+}
 
 switchLight()
 {
+echo sL: ${1} is ${lightclass[${1}]} \(${lightnames[${1}]}\) to be ${2} and is really ${_realState[${1}]}
+
+  if [ "${lightclass[${1}]}" = "433mhz" ]; then
+    switch433mhz ${1} ${2}
+    return 0
+  fi
+
+  _hueLight=${lightHueID[${1}]}
+
   if [ "${2}" = "ON" ]; then
     [ "${_realState[${1}]}" != "ON" ] && \
-      curl -H "Accept: application/json" \
+      ${CURL} -H "Accept: application/json" \
          -X PUT \
          --silent \
          -o /dev/null \
          --data '{"on":true}' \
-         http://${HUEDEV}/api/${HUEAPIKEY}/lights/${1}/state && \
+         http://${HUEDEV}/api/${HUEAPIKEY}/lights/${_hueLight}/state && \
       echo ${1} curled ON $(date +"%m-%d %H:%M:%S")
     _realState[${1}]="ON"
   else
     [ "${_realState[${1}]}" != "OFF" ] && \
-      curl -H "Accept: application/json" \
+      ${CURL} -H "Accept: application/json" \
          -X PUT \
          --silent \
          -o /dev/null \
          --data '{"on":false}' \
-         http://${HUEDEV}/api/${HUEAPIKEY}/lights/${1}/state && \
+         http://${HUEDEV}/api/${HUEAPIKEY}/lights/${_hueLight}/state && \
       echo ${1} curled OFF $(date +"%m-%d %H:%M:%S")
     _realState[${1}]="OFF"
   fi
@@ -163,6 +213,15 @@ do
     echo reading today"'"s schedule $(date) or ${_NOW}
     source ${VACA}/hue.sched
     #
+    # do this ONLY ONCE
+    #
+    [ "${#_realState[@]}" = "0" ] && for LIGHT in $(seq 0 $((${#lightnames[@]}-1))) # {
+    do
+      _realState[${LIGHT}]="unk"
+      echo looping ${_realState[${1}]}
+    done
+
+    #
     # reread schedule 10 minutes after the last light is turned off
     # for the day
     # 
@@ -175,24 +234,18 @@ do
     : # ls --full-time ${TOMFILE}
   else  # } {
     : #echo NOT reading today"'"s schedule
-    #
-    # state set up: assume all lights should be OFF
-    #
-    # TODO: works for up to 5 lights, make this dynamic for 
-    #       number of unique lights in schedule
-    #
-    declare -a lightstate=("OFF" \
-                           "OFF" \
-                           "OFF" )
   fi  # }
 
   if daylight ; then  # {
 
     # ensure all lights are off, it's daytime
 
-    switchLight 1 OFF
-    switchLight 2 OFF
-    switchLight 3 OFF
+echo dL: before ${_realState[*]}
+    for LIGHT in $(seq 0 $((${#lightnames[@]}-1))) # {
+    do
+      switchLight ${LIGHT} OFF
+    done # }
+echo dL: after ${_realState[*]}
 
     # now, wait for sunset
 
@@ -204,43 +257,54 @@ do
   else # }  {
 
     #
-    # it's night time, walk through light's schedule
+    # it's night time, walk through light schedules
     # turn those on which are supposed to be ON
     #
 
-    for LIGHT in $(seq 0 $((${#lights[@]}-1)))  # {
+    for LIGHT in $(seq 0 $((${#sched[@]}-1)))  # {
     do
 
-      _light=$((${lights[${LIGHT}]}-1))
+      _light=${sched[${LIGHT}]}
 
       _NOW=$(date +%s);
 
-      #echo checking ${_light} 
+      #
+      # determine if a light should be ON based on its
+      # scheduled period
+      #
+      # NB: for a light that is ONLY bytv its schedule is ignored
+      #
+      #echo checking ${_light} for ${LIGHT}
       if [ ${lightsON[${LIGHT}]} -lt ${_NOW} -a \
           ${lightsOFF[${LIGHT}]} -gt ${_NOW} ]; then
         lightstate[${_light}]=ON
-        #echo making ${_light} = ON
+        #echo making ${_light} \(${LIGHT}\) = ON
       fi
 
     done # }
 
+#exit; continue;
+
     tvison
     TVISON=${?}
 
-    for LIGHT in $(seq 0 $((${#lightstate[@]}-1)))  # {
+    for LIGHT in $(seq 0 $((${#lightnames[@]}-1))) # {
     do
-
-#echo ${LIGHT} should be ${lightstate[${LIGHT}]}
-#continue;
 
       #
       # lights can be driven by night time (bynite) or if
       # on vacation
       #
       if [ ${bynite[${LIGHT}]} -eq ${TRUE} ]; then
-        switchLight ${lights[${LIGHT}]} ${lightstate[${LIGHT}]}
+        #
+        # then light is either ON or OFF according to schedule
+        #
+        switchLight ${LIGHT} ${lightstate[${LIGHT}]}
       elif onvacation && [ ${byvacation[${LIGHT}]} -eq ${TRUE} ]; then
-        switchLight ${lights[${LIGHT}]} ${lightstate[${LIGHT}]}
+        #
+        # then light is either ON or OFF according to schedule
+        #
+        switchLight ${LIGHT} ${lightstate[${LIGHT}]}
       else
         :
       fi
@@ -252,9 +316,17 @@ do
       #
       if (! onvacation) && [ ${bytv[${LIGHT}]} -eq ${TRUE} ]; then
         if [ ${TVISON} -eq 0 ] ; then
-          switchLight ${lights[${LIGHT}]} ON
+          #
+          # then light is ON since TV is on
+          #
+          lightstate[${LIGHT}]=ON
+          switchLight ${LIGHT} ${lightstate[${LIGHT}]}
         else
-          switchLight ${lights[${LIGHT}]} OFF
+          #
+          # then light is OFF since TV is on
+          #
+          lightstate[${LIGHT}]=OFF
+          switchLight ${LIGHT} ${lightstate[${LIGHT}]}
         fi
       fi
 
@@ -264,6 +336,7 @@ do
     # wait for the next interval to change light state
     #
     sleep ${SLEEPYTIME}
+    echo checking lights $(date)
 
   fi  # }
 
