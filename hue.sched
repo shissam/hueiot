@@ -1,6 +1,7 @@
 
 TRUE=0
 FALSE=1
+NA=0
 
 #
 # _SUNUP and _SUNSET are set in the environment
@@ -18,42 +19,69 @@ if [ -z "${_SUNSET}" ]; then
 fi
 
 #
-# 1 is hallway
-# 2 is tv
-# 3 is attic
+# 0 is hallway
+# 1 is familyRoom
+# 2 is attic
+# 3 is kitchen LEDs
+# 4 is Etekcity test wallsocket
 #
 
+#
+# my names
+#
 declare -a lightnames=("hallway" \
                        "tv"      \
-                       "attic"   )
+                       "attic"   \
+                       "kitchen" \
+                       "etek4"   )
 
+#
+# type of light by index
+#
+declare -a lightclass=("hue"    \
+                       "hue"    \
+                       "hue"    \
+                       "433mhz" \
+                       "433mhz" )
+
+#
+# unique ID for each hue light (api)
+#
+declare -a lightHueID=("1"   \
+                       "2"   \
+                       "3"   \
+                       ${NA} \
+                       ${NA} )
+
+#
+# unique ID for each 433mhz light (on/off codesend)
+#
+declare -a light433mhzPULSE=(${NA} \
+                             ${NA} \
+                             ${NA} \
+                             "0"   \
+                             "200" )
+
+declare -a light433mhzON=(${NA}     \
+                          ${NA}     \
+                          ${NA}     \
+                          "3671297" \
+                          "5250307" )
+
+declare -a light433mhzOFF=(${NA}     \
+                           ${NA}     \
+                           ${NA}     \
+                           "3671297" \
+                           "5250316" )
+
+#
+# tracking state
+#
 declare -a lightstate=("OFF" \
                        "OFF" \
+                       "OFF" \
+                       "OFF" \
                        "OFF" )
-
-declare -a lights=("1" \
-                   "2" \
-                   "3" \
-                   "3" )
-
-# 1 on at sunset +/-15 min; off 9:30 +/-5min
-# 2 on at 7:00pm +/-5min; off 11:00pm +/-5min
-# 3 on at 54*2 min before sunrise; off at sunrise +/-5min
-# 3 on at sunset +/-5 min; off at 57*7 min after sunset
-
-declare -a lightsON=( \
-  $(date --date="Today $(date --date=@${_SUNSET} +"%H:%M:%S") $((${RANDOM}%15)) mins ago" +"%s") \
-  $(date --date="Today 19:00:00 $((${RANDOM}%5)) mins ago" +"%s") \
-  $(date --date="Today $(date --date=@${_SUNUP} +"%H:%M:%S") $((54*2)) mins ago" +"%s") \
-  $(date --date="Today $(date --date=@${_SUNSET} +"%H:%M:%S") $((${RANDOM}%5)) mins ago" +"%s") \
-)
-
-declare -a lightsOFF=( \
-  $(date --date="Today 21:30:00 $((${RANDOM}%5)) mins ago" +"%s") \
-  $(date --date="Today 23:00:00 $((${RANDOM}%5)) mins ago" +"%s") \
-  $(date --date="Today $(date --date=@${_SUNUP} +"%H:%M:%S") $((${RANDOM}%5)) mins" +"%s") \
-  $(date --date="Today $(date --date=@${_SUNSET} +"%H:%M:%S") $((57*7)) mins" +"%s") \
-)
 
 #
 # here the hallway and tv hue lights are not controlled by darkness
@@ -62,29 +90,61 @@ declare -a lightsOFF=( \
 declare -a bynite=( \
   ${FALSE} \
   ${FALSE} \
-  ${TRUE} \
-  ${TRUE} \
+  ${TRUE}  \
+  ${FALSE} \
+  ${FALSE} \
 )
 
 #
-# the hallway and tv hue lights are controlled by the state of the
+# the hallway, tv hue lights and kitchen 433mhz lights
+# are controlled by the state of the
 # home theater, while the attic light is not
 #
 declare -a bytv=( \
-  ${TRUE} \
-  ${TRUE} \
+  ${TRUE}  \
+  ${TRUE}  \
   ${FALSE} \
-  ${FALSE} \
+  ${TRUE}  \
+  ${TRUE}  \
 )
 
 #
 # the hallway and tv hue lights will go ON/OFF by vacation schedule
-# while the attic light schedule ignores vacation status
+# while the attic light and kitchen light schedule ignores vacation status
 #
 declare -a byvacation=( \
-  ${TRUE} \
-  ${TRUE} \
+  ${TRUE}  \
+  ${TRUE}  \
   ${FALSE} \
   ${FALSE} \
+  ${FALSE} \
+)
+
+#
+# light schedule declarations
+#
+declare -a sched=("0" \
+                  "1" \
+                  "2" \
+                  "2" \
+                  "3" \
+                  "4" )
+
+declare -a lightsON=( \
+  $(date --date="Today $(date --date=@${_SUNSET} +"%H:%M:%S") $((${RANDOM}%15)) mins ago" +"%s") \
+  $(date --date="Today 19:00:00 $((${RANDOM}%5)) mins ago" +"%s") \
+  $(date --date="Today $(date --date=@${_SUNUP} +"%H:%M:%S") $((54*2)) mins ago" +"%s") \
+  $(date --date="Today $(date --date=@${_SUNSET} +"%H:%M:%S") $((${RANDOM}%5)) mins ago" +"%s") \
+  $(date --date="Today 19:00:00 $((${RANDOM}%5)) mins ago" +"%s") \
+  $(date --date="Today 19:00:00 $((${RANDOM}%5)) mins ago" +"%s") \
+)
+
+declare -a lightsOFF=( \
+  $(date --date="Today 21:30:00 $((${RANDOM}%5)) mins ago" +"%s") \
+  $(date --date="Today 23:00:00 $((${RANDOM}%5)) mins ago" +"%s") \
+  $(date --date="Today $(date --date=@${_SUNUP} +"%H:%M:%S") $((${RANDOM}%5)) mins" +"%s") \
+  $(date --date="Today $(date --date=@${_SUNSET} +"%H:%M:%S") $((57*7)) mins" +"%s") \
+  $(date --date="Today 23:00:00 $((${RANDOM}%5)) mins ago" +"%s") \
+  $(date --date="Today 23:00:00 $((${RANDOM}%5)) mins ago" +"%s") \
 )
 
