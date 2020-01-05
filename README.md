@@ -19,7 +19,7 @@ Modify ```hue.sched``` for your lighting preferences
 
 Rules:
 *  ```lightnames``` and ```lightstate``` have the same number of elements equal to the number of lights you want to control.
-*  ```lights```, ```lightsON```, ```lightsOFF```, ```bynite```, ```bytv```, and ```byvacation``` have the same number of elements equal to the number of scheduled ```lightsON events ``` (or ```lightsOFF``` if you prefer).
+*  ```lights```, ```lightsON```, ```lightsOFF```, ```bynite```, ```bytv```, and ```byvacation``` have the same number of elements equal to the number of scheduled ```lightsON events `` (or ```lightsOFF``` if you prefer).
 Determining the Linux epoch for ```lightsON``` and ```lightsOFF```
 ### Local Settings
 Modify ```autoHue.sh``` for local settings
