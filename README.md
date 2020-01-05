@@ -44,13 +44,15 @@ TBD
 
 # References/Dependencies
 Motivated and inspired by ```Risacher's Sunwait``` program which provides celestial times for solar movement by GPS location. The version used pre-dates Risacher's current version of Sunwait now on GitHub (see Task List below).
-Project Hardware
+# Project Hardware
 ## Raspberry PI
 ## 433Mhz Controller
 ![433Mhz Controller](/images/433mhzCtrl.jpg)
 ## Hue Bridge
 ## 433Mhz LED Strip
+![433Mhz LED Strip](/images/433mhzLED.jpg)
 ## Etekcity 433Mhz Outlets
+![Etekcity 433Mhz Outlets](/images/etek.jpg)
 # Task List
 - [x] Debian/Ubuntu
 - [ ] Place localizations, API keys in a configuration/parameters file
