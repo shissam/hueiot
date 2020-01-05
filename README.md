@@ -6,21 +6,25 @@ I am certainly thrilled with IoT, but I prefer to keep as much as I can within t
 
 # Usage
 ## Configure
+### Lighting Devices
+* ```lightnames```: these are logical and can essentially be anything desired.
+* ```lightclass```: describes type of light in ```lightnames```, currently either ```hue``` or ```433mhz```.
+* ```lightHueID```: ID used for the hue light in the API to the Hue Bridge.
+* ```light433mhzON``` and ```light433mhzOFF```: 433mhz code for switching 433mhz ```ON/OFF```
 ### Lighting Schedules
 Modify ```hue.sched``` for your lighting preferences
-* ```lightnames```: these are logical and can essentially be anything desired.
-* ```lightstate```: should be initialized to ```OFF```.
-* ```lights```: the assigned light number by the HUE bridge. May take some testing to get the correct ordinal number to correspond to the logical light.
+* ```sched```: Starting at ```0```, the ordinal light number of configured ```lightnames``` (```0``` is the first, ```1``` is the second, and so on). Every logical light in ```lightnames``` can have more than one schedule entry in ```sched```.
 * ```lightsON```: The date time (in Linux epoch) when the light is to come on.
 * ```lightsOFF```: The date time (in Linux epoch) when the light is to go out.
 * ```bynite```: ```TRUE``` means the scheduled event should follow Sun up/down, otherwise set to ```FALSE```.
 * ```bytv```: ```TRUE``` means the scheduled event should follow state of another IOT device in the household, like a TV/Home Theater. Otherwise set to ```FALSE```.
 * ```byvacation```: ```TRUE``` means the scheduled event should follow state of being away (such as on vacation) for a longer period of time.  Otherwise set to ```FALSE```.
-
-Rules:
-*  ```lightnames``` and ```lightstate``` have the same number of elements equal to the number of lights you want to control.
-*  ```lights```, ```lightsON```, ```lightsOFF```, ```bynite```, ```bytv```, and ```byvacation``` have the same number of elements equal to the number of scheduled ```lightsON events``` (or ```lightsOFF``` if you prefer).
-Determining the Linux epoch for ```lightsON``` and ```lightsOFF```
+### Lighting Configuration Rules:
+* ```lightstate```: should be initialized to ```OFF```.
+* ```lightnames```, ```bynite```, ```bytv```, ```byvacation``` and ```lightstate``` must have the same number of elements equal to the number of lights you want to control.
+*  ```sched```, ```lightsON```, and ```lightsOFF```  must have the same number of elements equal to the number of scheduled ```lightsON events``` (and ```lightsOFF```) you prefer.
+### Determining the Linux epoch for ```lightsON``` and ```lightsOFF```
+* TBD
 ### Local Settings
 Modify ```autoHue.sh``` for local settings
 * LOC
