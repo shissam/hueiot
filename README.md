@@ -6,13 +6,13 @@ I am certainly thrilled with IoT, but I prefer to keep as much as I can within t
 
 # Usage
 ## Configure
+Modify ```hue.sched``` for your lighting preferences
 ### Lighting Devices
 * ```lightnames```: these are logical and can essentially be anything desired.
 * ```lightclass```: describes type of light in ```lightnames```, currently either ```hue``` or ```433mhz```.
 * ```lightHueID```: ID used for the hue light in the API to the Hue Bridge.
 * ```light433mhzON``` and ```light433mhzOFF```: 433mhz code for switching 433mhz ```ON/OFF```
 ### Lighting Schedules
-Modify ```hue.sched``` for your lighting preferences
 * ```sched```: Starting at ```0```, the ordinal light number of configured ```lightnames``` (```0``` is the first, ```1``` is the second, and so on). Every logical light in ```lightnames``` can have more than one schedule entry in ```sched```.
 * ```lightsON```: The date time (in Linux epoch) when the light is to come on.
 * ```lightsOFF```: The date time (in Linux epoch) when the light is to go out.
