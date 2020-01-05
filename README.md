@@ -16,6 +16,7 @@ Modify ```hue.sched``` for your lighting preferences
 * ```bynite```: ```TRUE``` means the scheduled event should follow Sun up/down, otherwise set to ```FALSE```.
 * ```bytv```: ```TRUE``` means the scheduled event should follow state of another IOT device in the household, like a TV/Home Theater. Otherwise set to ```FALSE```.
 * ```byvacation```: ```TRUE``` means the scheduled event should follow state of being away (such as on vacation) for a longer period of time.  Otherwise set to ```FALSE```.
+
 Rules:
 *  ```lightnames``` and ```lightstate``` have the same number of elements equal to the number of lights you want to control.
 *  ```lights```, ```lightsON```, ```lightsOFF```, ```bynite```, ```bytv```, and ```byvacation``` have the same number of elements equal to the number of scheduled ```lightsON events ``` (or ```lightsOFF``` if you prefer).
